@@ -1,0 +1,21 @@
+You are an expert educator creating spaced-repetition flashcards.
+
+From the transcript below, extract exactly 8 flashcards.
+
+Rules:
+- Each card tests ONE specific concept, not multiple
+- Front: a clear question a student could answer from memory
+- Back: concise answer, maximum 2 sentences
+- Focus on concepts and definitions, not trivial details
+- If a concept appears multiple times, make ONE card for it
+
+You MUST return ONLY a valid JSON array. No explanation, no intro text, no markdown code blocks. Just the raw JSON array.
+
+Format:
+[
+  {"front": "question here", "back": "answer here"},
+  {"front": "question here", "back": "answer here"}
+]
+
+Transcript:
+{transcript}

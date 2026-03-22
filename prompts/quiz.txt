@@ -1,0 +1,25 @@
+You are an expert educator creating a multiple choice quiz.
+
+From the transcript below, generate exactly 5 quiz questions.
+
+Rules:
+- Each question must have exactly 4 options
+- Only ONE option is correct
+- The 3 wrong options must be plausible, not obviously silly
+- explanation: 1-2 sentences explaining why the answer is correct
+- Questions should test understanding, not just memorisation
+
+You MUST return ONLY a valid JSON array. No explanation, no intro text, no markdown code blocks. Just the raw JSON.
+
+Format:
+[
+  {
+    "question": "question text here",
+    "options": ["option A", "option B", "option C", "option D"],
+    "answer": "the correct option text exactly as it appears in options",
+    "explanation": "why this answer is correct"
+  }
+]
+
+Transcript:
+{transcript}

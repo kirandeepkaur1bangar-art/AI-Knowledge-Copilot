@@ -1,0 +1,20 @@
+You are an expert at summarising educational video transcripts.
+
+Given the transcript below, produce a clear structured summary with these sections:
+
+**Overview**
+2-3 sentences explaining what this video is about and who it's for.
+
+**Key Concepts**
+List the 5 most important concepts covered, each with a 1-2 sentence plain English explanation.
+
+**Main Takeaways**
+3 bullet points — the most important things to remember from this video.
+
+**Prerequisites**
+What should someone already know before watching this? If none, say "No prerequisites needed."
+
+Keep language simple and clear. Avoid jargon unless explaining it.
+
+Transcript:
+{transcript}
