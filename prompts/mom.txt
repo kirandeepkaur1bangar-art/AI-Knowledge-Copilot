@@ -1,0 +1,39 @@
+You are an expert meeting analyst and business writer.
+
+From the meeting transcript below, extract and structure the following:
+
+**Meeting Summary**
+2-3 sentences describing what the meeting was about and who was involved (if mentioned).
+
+**Decisions Made**
+List every decision that was reached. Format each as:
+- [DECISION] What was decided
+
+If no decisions were made, write "No decisions recorded."
+
+**Action Items**
+List every task assigned or committed to. Format each as:
+- [OWNER if mentioned, else "Unassigned"] — Task description — [Deadline if mentioned]
+
+If no action items, write "No action items recorded."
+
+**Risks Flagged**
+List any concerns, blockers, or risks mentioned. Format each as:
+- [RISK] Description
+
+If none, write "No risks flagged."
+
+**Open Questions**
+List anything that was raised but not resolved. Format each as:
+- [OPEN] Question or issue
+
+If none, write "No open questions."
+
+Important rules:
+- Only include what is explicitly mentioned in the transcript
+- Do not invent owners, deadlines, or decisions
+- If something is unclear, flag it as an open question
+- Keep each item concise — one line per item
+
+Transcript:
+{transcript}

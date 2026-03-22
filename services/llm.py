@@ -11,8 +11,8 @@ load_dotenv()
 # ─────────────────────────────────────────────
 # Model name in ONE place
 # ─────────────────────────────────────────────
-MODEL = "llama-3.3-70b-versatile"
-
+#MODEL = "llama-3.3-70b-versatile"
+MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 # ─────────────────────────────────────────────
 # The only function the rest of the app ever calls

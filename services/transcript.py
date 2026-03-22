@@ -1,8 +1,9 @@
 # services/transcript.py
 
 import re
-from youtube_transcript_api import (
-    YouTubeTranscriptApi,
+import os
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import (
     TranscriptsDisabled,
     NoTranscriptFound
 )
@@ -14,16 +15,11 @@ from youtube_transcript_api import (
 
 def extract_video_id(url: str) -> str:
     """
-    YouTube URLs come in 3 formats — we handle all of them:
-
+    Handles all YouTube URL formats:
     1. https://www.youtube.com/watch?v=dQw4w9WgXcQ
     2. https://youtu.be/dQw4w9WgXcQ
-    3. https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=120s
-
-    We use regex to find the 11-character video ID in any of these.
-    YouTube video IDs are always exactly 11 characters.
+    3. https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=120s&list=xyz
     """
-
     pattern = r"(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})"
     match = re.search(pattern, url)
 
@@ -37,55 +33,151 @@ def extract_video_id(url: str) -> str:
 # PART 2: Path A — fetch YouTube captions
 # ─────────────────────────────────────────────
 
-
 def get_transcript_from_captions(video_id: str) -> str:
     """
-    Fetches YouTube's own captions for the video.
-    Updated to use the new youtube-transcript-api syntax.
+    Fetches YouTube captions in any available language.
+    Tries English first, falls back to whatever language exists.
     """
-
-    # New API: create an instance first, then fetch
     ytt_api = YouTubeTranscriptApi()
-    fetched = ytt_api.fetch(video_id)
 
-    # fetched is a FetchedTranscript object
-    # iterate over it to get text snippets
+    try:
+        # Try English first
+        fetched = ytt_api.fetch(video_id)
+    except NoTranscriptFound:
+        # English not available — fetch whatever language exists
+        transcript_list = ytt_api.list(video_id)
+
+        # Get the first available transcript
+        available = list(transcript_list)
+        if not available:
+            raise NoTranscriptFound(video_id, [], {})
+
+        # Fetch whichever transcript is available
+        fetched = available[0].fetch()
+        print(f"  No English captions — using: {available[0].language}")
+
     full_text = " ".join([snippet.text for snippet in fetched])
-
     return full_text
 
-
 # ─────────────────────────────────────────────
-# PART 3: Path B — Whisper fallback
+# PART 3: Path B — download audio + Whisper
 # ─────────────────────────────────────────────
 
 def get_transcript_from_whisper(video_id: str) -> str:
     """
-    Fallback when captions don't exist.
-    Downloads audio and transcribes locally with Whisper.
-
-    We skipped Whisper install for now — this raises a
-    helpful error instead of crashing silently.
+    Downloads audio from YouTube and transcribes locally with Whisper.
+    Used as fallback when captions don't exist.
+    Automatically tries multiple browsers for cookies.
     """
 
-    raise NotImplementedError(
-        "This video has no captions. "
-        "Whisper fallback is not set up yet — "
-        "try a video that has captions enabled."
-    )
+    import yt_dlp
+    import whisper
+
+    audio_path = f"/tmp/{video_id}.mp3"
+
+    base_opts = {
+        "outtmpl": f"/tmp/{video_id}",
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+        }],
+        "quiet": True,
+        "format": "bestaudio/best/worstaudio/worst",
+    }
+
+    # Try browsers in order until one works
+    browsers = ["chrome", "firefox", "chromium", "edge", "safari"]
+    downloaded = False
+
+    for browser in browsers:
+        try:
+            print(f"  Trying cookies from {browser}...")
+            opts = {
+                **base_opts,
+                "cookiesfrombrowser": (browser,),
+            }
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                ydl.download([f"https://www.youtube.com/watch?v={video_id}"])
+            print(f"  Download succeeded using {browser} cookies.")
+            downloaded = True
+            break
+        except Exception as e:
+            print(f"  {browser} failed: {e}")
+            continue
+
+    # Last resort — try without cookies
+    if not downloaded:
+        print("  Trying without cookies...")
+        try:
+            with yt_dlp.YoutubeDL(base_opts) as ydl:
+                ydl.download([f"https://www.youtube.com/watch?v={video_id}"])
+            downloaded = True
+        except Exception:
+            raise ValueError(
+                "Could not download this video. YouTube is blocking "
+                "automated downloads. Please either:\n"
+                "1. Try a different video\n"
+                "2. Download the audio manually and use the "
+                "'Audio File' upload option instead."
+            )
+
+    # Transcribe with Whisper
+    print("  Transcribing with Whisper...")
+    model = whisper.load_model("base")
+    result = model.transcribe(audio_path)
+
+    # Clean up temp file
+    if os.path.exists(audio_path):
+        os.remove(audio_path)
+        print("  Temp file cleaned up.")
+
+    return result["text"]
 
 
 # ─────────────────────────────────────────────
-# PART 4: Main function — only thing other files call
+# PART 4: Audio file upload path
+# ─────────────────────────────────────────────
+
+def get_transcript_from_audio_file(audio_bytes: bytes, filename: str) -> str:
+    """
+    Transcribes an uploaded audio file using Whisper.
+    Used when user uploads their own audio in the UI.
+    No YouTube involved — always works.
+    """
+
+    import whisper
+    import tempfile
+
+    suffix = os.path.splitext(filename)[1]
+
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(audio_bytes)
+        tmp_path = tmp.name
+
+    print(f"  Transcribing uploaded file: {filename}")
+
+    try:
+        model = whisper.load_model("base")
+        result = model.transcribe(tmp_path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+            print("  Temp file cleaned up.")
+
+    return result["text"]
+
+
+# ─────────────────────────────────────────────
+# PART 5: Main function — only thing other files call
 # ─────────────────────────────────────────────
 
 def get_transcript(url: str) -> str:
     """
-    THE only function the rest of the app calls.
+    THE only function the rest of the app calls for YouTube URLs.
 
-    Pass in any YouTube URL, get back plain text.
-    Handles all URL formats, tries captions first,
-    falls back to Whisper if needed.
+    Tries captions first — fast and free.
+    Falls back to Whisper if captions are disabled.
+    Shows clear error if both fail.
     """
 
     video_id = extract_video_id(url)
@@ -100,4 +192,3 @@ def get_transcript(url: str) -> str:
     except (TranscriptsDisabled, NoTranscriptFound):
         print("  No captions found. Trying Whisper fallback...")
         return get_transcript_from_whisper(video_id)
-    

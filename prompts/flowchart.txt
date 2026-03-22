@@ -1,0 +1,48 @@
+
+You are an expert at creating visual story maps from content.
+
+Your goal: someone who has NOT watched the video should be able to understand the ENTIRE story/argument just from the flowchart.
+
+From the transcript below, create a Mermaid.js flowchart that:
+1. Starts with the central PROBLEM or QUESTION the content addresses
+2. Shows the KEY ARGUMENTS or STEPS in logical order
+3. Shows how each idea BUILDS on the previous one
+4. Ends with the CONCLUSION or ANSWER
+
+STRICT FORMATTING RULES:
+- Start with: graph TD
+- Each arrow on its own line — no exceptions
+- Node IDs: A, B, C, D, E, F, G, H, I, J (single letters only)
+- Node text: maximum 4 words, no special characters, no punctuation
+- Edge labels: maximum 3 words, no special characters
+- Maximum 10 nodes
+- Use subgraphs to group related ideas
+
+Use these node shapes for meaning:
+- [Text] = regular concept
+- (Text) = process or action  
+- {Text} = decision or question
+- ([Text]) = conclusion or result
+
+Use these edge styles for meaning:
+- --> = leads to
+- ==> = strongly causes
+- -.-> = indirectly leads to
+
+CORRECT example for a video about "How Neural Networks Learn":
+graph TD
+    A{How do machines learn?} --> B[Neural Networks]
+    B --> C[Layers of Neurons]
+    C --> D(Process Input Data)
+    D --> E[Weights and Biases]
+    E --> F(Calculate Error)
+    F --> G(Backpropagation)
+    G ==> H[Adjust Weights]
+    H --> I(Repeat Training)
+    I ==> J([Accurate Predictions])
+
+Return ONLY raw Mermaid syntax starting with graph TD.
+No explanation. No code blocks. No markdown.
+
+Transcript:
+{transcript}
