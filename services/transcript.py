@@ -35,30 +35,38 @@ def extract_video_id(url: str) -> str:
 
 def get_transcript_from_captions(video_id: str) -> str:
     """
-    Fetches YouTube captions in any available language.
-    Tries English first, falls back to whatever language exists.
+    Fetches YouTube captions.
+    Uses proxy on cloud deployments to avoid IP blocks.
     """
+    import os
+
     ytt_api = YouTubeTranscriptApi()
 
-    try:
-        # Try English first
-        fetched = ytt_api.fetch(video_id)
-    except NoTranscriptFound:
-        # English not available — fetch whatever language exists
-        transcript_list = ytt_api.list(video_id)
+    # Check if running on cloud (Streamlit Cloud sets this)
+    is_cloud = os.getenv("IS_CLOUD", "false").lower() == "true"
 
-        # Get the first available transcript
+    try:
+        if is_cloud:
+            # Use webshare proxy on cloud
+            from youtube_transcript_api.proxies import WebshareProxyConfig
+            proxy_config = WebshareProxyConfig(
+                proxy_username=os.getenv("PROXY_USERNAME"),
+                proxy_password=os.getenv("PROXY_PASSWORD"),
+            )
+            ytt_api = YouTubeTranscriptApi(proxies=proxy_config)
+
+        fetched = ytt_api.fetch(video_id)
+
+    except NoTranscriptFound:
+        transcript_list = ytt_api.list(video_id)
         available = list(transcript_list)
         if not available:
             raise NoTranscriptFound(video_id, [], {})
-
-        # Fetch whichever transcript is available
         fetched = available[0].fetch()
         print(f"  No English captions — using: {available[0].language}")
 
     full_text = " ".join([snippet.text for snippet in fetched])
     return full_text
-
 # ─────────────────────────────────────────────
 # PART 3: Path B — download audio + Whisper
 # ─────────────────────────────────────────────
