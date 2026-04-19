@@ -3,18 +3,9 @@
 
 > Transform any YouTube video into structured, actionable learning materials — instantly.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit)](https://ai-knowledge-copilot1.streamlit.app)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/kirandeepkaur1bangar-art/AI-Knowledge-Copilot)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python)](https://python.org)
 [![Groq](https://img.shields.io/badge/Groq-Llama%204-FF6B35?style=for-the-badge)](https://groq.com)
-
----
-
-## 🚀 Live Demo
-
-**Try it now:** [https://ai-knowledge-copilot1.streamlit.app](https://ai-knowledge-copilot1.streamlit.app)
-
-Paste any YouTube URL and get a full learning kit in under 30 seconds — no signup, no install.
 
 ---
 
